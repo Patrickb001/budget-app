@@ -9,9 +9,9 @@ const account1 = {
   owner: 'Patrick Borgella',
   movements: [],
   savings: [],
+  movementsDates: [],
   pin: 1111,
 
-  movementsDates: [],
   currency: 'USD',
   locale: 'en-US',
 };
@@ -64,6 +64,25 @@ const inputSavingsAmount = document.querySelector('.form__input--savings');
 
 /////////////////////////////////////////////////
 // Functions
+
+const load = function (acc) {
+  let deposits;
+  let dates;
+  let savings;
+  if (localStorage.getItem('deposit') !== null) {
+    deposits = JSON.parse(localStorage.getItem('deposit'));
+    console.log(deposits);
+    acc.movements = deposits;
+  } else return;
+  if (localStorage.getItem('date') !== null) {
+    dates = JSON.parse(localStorage.getItem('date'));
+    acc.movementsDates = dates;
+  } else return;
+  if (localStorage.getItem('savings') !== null) {
+    savings = JSON.parse(localStorage.getItem('savings'));
+    acc.savings = savings;
+  } else return;
+};
 
 const formatMovementDate = function (date, locale) {
   const calcDaysPassed = (date1, date2) =>
@@ -267,6 +286,7 @@ btnLogin.addEventListener('click', function (e) {
     timer = startLogOutTimer();
 
     // Update UI
+    load(currentAccount);
     updateUI(currentAccount);
   }
 });
@@ -280,6 +300,8 @@ btnWithdrawal.addEventListener('click', function (e) {
   if (amount > 0 && currentAccount.balance >= amount) {
     // Doing the transfer
     currentAccount.movements.push(-amount);
+    let depositJson = JSON.stringify(currentAccount.movements);
+    localStorage.setItem('deposit', depositJson);
 
     //Add transfer date
     currentAccount.movementsDates.push(new Date().toISOString());
@@ -291,6 +313,9 @@ btnWithdrawal.addEventListener('click', function (e) {
     clearInterval(timer);
     timer = startLogOutTimer();
   }
+  let datesJson = JSON.stringify(currentAccount.movementsDates);
+  localStorage.setItem('date', datesJson);
+  console.log(currentAccount.movementsDates);
 });
 
 btnDeposit.addEventListener('click', function (e) {
@@ -302,6 +327,8 @@ btnDeposit.addEventListener('click', function (e) {
     // Add movement
     if (amount !== 0 && amount > 0) {
       currentAccount.movements.push(amount);
+      let depositJson = JSON.stringify(currentAccount.movements);
+      localStorage.setItem('deposit', depositJson);
 
       // Add deposit date
       currentAccount.movementsDates.push(new Date().toISOString());
@@ -313,6 +340,9 @@ btnDeposit.addEventListener('click', function (e) {
       clearInterval(timer);
       timer = startLogOutTimer();
     }
+    let datesJson = JSON.stringify(currentAccount.movementsDates);
+    localStorage.setItem('date', datesJson);
+    console.log(datesJson);
   };
 
   deposit();
@@ -330,9 +360,13 @@ btnSavings.addEventListener('click', function (e) {
     if (amount !== 0) {
       if (isNegativeSavings < 0) return;
       currentAccount.savings.push(amount);
+      let savingsJson = JSON.stringify(currentAccount.savings);
+      localStorage.setItem('savings', savingsJson);
 
       // Add deposit date
       currentAccount.movementsDates.push(new Date().toISOString());
+      let datesJson = JSON.stringify(currentAccount.movementsDates);
+      localStorage.setItem('date', datesJson);
 
       // Update UI
       updateUI(currentAccount);
