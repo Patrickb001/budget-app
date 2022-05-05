@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////
 // Data
 
-const account1 = {
+const account = {
   owner: 'Patrick Borgella',
   movements: [],
   savings: [],
@@ -15,19 +15,6 @@ const account1 = {
   currency: 'USD',
   locale: 'en-US',
 };
-
-const account2 = {
-  owner: 'Makayla Malveaux',
-  movements: [],
-  savings: [],
-  pin: 1111,
-
-  movementsDates: [],
-  currency: 'USD',
-  locale: 'en-US',
-};
-
-const accounts = [account1, account2];
 
 /////////////////////////////////////////////////
 // Elements
@@ -189,17 +176,15 @@ const calcDisplaySummary = function (acc) {
   labelSumSavings.textContent = formatCur(savings, acc.locale, acc.currency);
 };
 
-const createUsername = function (accs) {
-  accs.forEach(function (acc) {
-    acc.username = acc.owner
-      .toLowerCase()
-      .split(' ')
-      .map(name => name[0])
-      .join('');
-  });
+const createUsername = function (acc) {
+  acc.username = acc.owner
+    .toLowerCase()
+    .split(' ')
+    .map(name => name[0])
+    .join('');
 };
 
-createUsername(accounts);
+createUsername(account);
 
 const updateUI = function (acc) {
   //Display savings
@@ -215,107 +200,52 @@ const updateUI = function (acc) {
   calcDisplaySummary(acc);
 };
 
-const startLogOutTimer = function () {
-  const tick = function () {
-    const min = String(Math.trunc(time / 60)).padStart(2, 0);
-    const sec = String(time % 60).padStart(2, 0);
-
-    // In each call, print the remainting time to the UI
-    labelTimer.textContent = `${min}:${sec}`;
-
-    // When 0 seconds, stop timer and log out user
-    if (time === 0) {
-      clearInterval(timer);
-      labelWelcome.textContent = `Log on to get started`;
-      containerApp.style.opacity = 0;
-    }
-
-    // Decrease 1s
-    time--;
-  };
-
-  //Set time to 5 minutes
-  let time = 300;
-
-  // Call the timer every second
-  tick();
-  const timer = setInterval(tick, 1000);
-
-  return timer;
-};
-
 ///////////////////////////////////////
 // Event handlers
 let currentAccount, timer;
 
-btnLogin.addEventListener('click', function (e) {
-  e.preventDefault();
+function init() {
+  // Create current date and time
+  const now = new Date();
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  };
 
-  currentAccount = accounts.find(
-    acc => acc.username === inputLoginUsername.value
-  );
+  labelDate.textContent = new Intl.DateTimeFormat(
+    account.locale,
+    options
+  ).format(now);
 
-  if (currentAccount?.pin === +inputLoginPin.value) {
-    //Display UI and message
-    labelWelcome.textContent = `Welcome back, ${
-      currentAccount.owner.split(' ')[0]
-    }`;
-    containerApp.style.opacity = 100;
-
-    // Create current date and time
-    const now = new Date();
-    const options = {
-      hour: 'numeric',
-      minute: 'numeric',
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric',
-    };
-
-    labelDate.textContent = new Intl.DateTimeFormat(
-      currentAccount.locale,
-      options
-    ).format(now);
-
-    // Clear input fields
-    inputLoginUsername.value = inputLoginPin.value = '';
-    inputLoginPin.blur();
-
-    // timer
-    if (timer) clearInterval(timer);
-    timer = startLogOutTimer();
-
-    // Update UI
-    load(currentAccount);
-    updateUI(currentAccount);
-  }
-});
-
+  // Update UI
+  load(account);
+  updateUI(account);
+}
+init();
 btnWithdrawal.addEventListener('click', function (e) {
   e.preventDefault();
   const amount = +inputTransferAmount.value;
 
   inputTransferAmount.value = '';
 
-  if (amount > 0 && currentAccount.balance >= amount) {
+  if (amount > 0 && account.balance >= amount) {
     // Doing the transfer
-    currentAccount.movements.push(-amount);
-    let depositJson = JSON.stringify(currentAccount.movements);
+    account.movements.push(-amount);
+    let depositJson = JSON.stringify(account.movements);
     localStorage.setItem('deposit', depositJson);
 
     //Add transfer date
-    currentAccount.movementsDates.push(new Date().toISOString());
+    account.movementsDates.push(new Date().toISOString());
 
     // Update UI
-    updateUI(currentAccount);
-
-    // Reset timer
-    clearInterval(timer);
-    timer = startLogOutTimer();
+    updateUI(account);
   }
-  let datesJson = JSON.stringify(currentAccount.movementsDates);
+  let datesJson = JSON.stringify(account.movementsDates);
   localStorage.setItem('date', datesJson);
-  console.log(currentAccount.movementsDates);
+  console.log(account.movementsDates);
 });
 
 btnDeposit.addEventListener('click', function (e) {
@@ -326,21 +256,17 @@ btnDeposit.addEventListener('click', function (e) {
   const deposit = function () {
     // Add movement
     if (amount !== 0 && amount > 0) {
-      currentAccount.movements.push(amount);
-      let depositJson = JSON.stringify(currentAccount.movements);
+      account.movements.push(amount);
+      let depositJson = JSON.stringify(account.movements);
       localStorage.setItem('deposit', depositJson);
 
       // Add deposit date
-      currentAccount.movementsDates.push(new Date().toISOString());
+      account.movementsDates.push(new Date().toISOString());
 
       // Update UI
-      updateUI(currentAccount);
-
-      // Reset timer
-      clearInterval(timer);
-      timer = startLogOutTimer();
+      updateUI(account);
     }
-    let datesJson = JSON.stringify(currentAccount.movementsDates);
+    let datesJson = JSON.stringify(account.movementsDates);
     localStorage.setItem('date', datesJson);
     console.log(datesJson);
   };
@@ -352,43 +278,29 @@ btnDeposit.addEventListener('click', function (e) {
 btnSavings.addEventListener('click', function (e) {
   e.preventDefault();
   const amount = Math.floor(inputSavingsAmount.value);
-  const savings = currentAccount.savings.reduce((acc, mov) => acc + mov, 0);
+  const savings = account.savings.reduce((acc, mov) => acc + mov, 0);
 
   const isNegativeSavings = savings + amount;
 
   const deposit = function () {
     if (amount !== 0) {
       if (isNegativeSavings < 0) return;
-      currentAccount.savings.push(amount);
-      let savingsJson = JSON.stringify(currentAccount.savings);
+      account.savings.push(amount);
+      let savingsJson = JSON.stringify(account.savings);
       localStorage.setItem('savings', savingsJson);
 
       // Add deposit date
-      currentAccount.movementsDates.push(new Date().toISOString());
-      let datesJson = JSON.stringify(currentAccount.movementsDates);
+      account.movementsDates.push(new Date().toISOString());
+      let datesJson = JSON.stringify(account.movementsDates);
       localStorage.setItem('date', datesJson);
 
       // Update UI
-      updateUI(currentAccount);
-
-      // Reset timer
-      clearInterval(timer);
-      timer = startLogOutTimer();
+      updateUI(account);
     }
   };
 
   deposit();
   inputSavingsAmount.value = '';
-});
-
-btnLogout.addEventListener('click', function (e) {
-  e.preventDefault();
-
-  //Hide UI
-  containerApp.style.opacity = 0;
-
-  //Change welcome message
-  labelWelcome.textContent = 'Log in to get started';
 });
 
 let sorted = false;

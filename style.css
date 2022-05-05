@@ -19,7 +19,7 @@ body {
 
 nav {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   padding: 0 2rem;
 }
@@ -165,8 +165,8 @@ nav {
   gap: 2rem;
 
   /* NOTE This creates the fade in/out animation */
-  opacity: 0;
-  transition: all 1s;
+  /* opacity: 0; */
+  /* transition: all 1s; */
 }
 
 .display-container {
